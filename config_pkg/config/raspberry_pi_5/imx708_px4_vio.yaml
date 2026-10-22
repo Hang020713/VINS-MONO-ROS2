@@ -1,0 +1,78 @@
+%YAML:1.0
+
+# Calibrated for Raspberry Pi Camera Module 3 (IMX708), 800x600, 30 Hz,
+# with the PX4 sensor_combined -> sensor_msgs/Imu converter and imu_clock_bridge.
+calibration_required: 0
+
+image_topic: "/camera/image_raw"
+imu_topic: "/imu/data_vio"
+output_path: "/tmp/vins_pi5"
+
+# Kalibr pinhole-radtan-rs result for the 800x600 IMX708 stream.
+model_type: PINHOLE
+camera_name: imx708
+image_width: 800
+image_height: 600
+distortion_parameters:
+   k1: 0.00915112
+   k2: -0.01141517
+   p1: -0.00296909
+   p2: 0.00100827
+projection_parameters:
+   fx: 1170.36089077
+   fy: 1168.98816219
+   cx: 535.38041724
+   cy: 285.27644626
+
+# Kalibr T_ic, camera pose in the converted FLU IMU frame.
+# Mode 1 allows VINS to refine the calibrated initial transform.
+estimate_extrinsic: 1
+extrinsicRotation: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   data: [-0.03516015, 0.02796666, 0.99899031,
+           0.99923235, -0.01629668, 0.03562489,
+           0.01727654, 0.99947600, -0.02737220]
+extrinsicTranslation: !!opencv-matrix
+   rows: 3
+   cols: 1
+   dt: d
+   data: [0.01990552, -0.00211620, 0.10954284]
+
+max_cnt: 150
+min_dist: 25
+freq: 30
+F_threshold: 1.0
+show_track: 0
+equalize: 0
+fisheye: 0
+
+max_solver_time: 0.04
+max_num_iterations: 8
+keyframe_parallax: 10.0
+
+# Kalibr IMU noise estimates (calibration log sample rate: 200 Hz).
+acc_n: 0.000686
+gyr_n: 4.89e-5
+acc_w: 0.0001
+gyr_w: 1.0e-5
+g_norm: 9.80665
+
+loop_closure: 0
+load_previous_pose_graph: 0
+fast_relocalization: 0
+pose_graph_save_path: "/tmp/vins_pi5/"
+support_path: ""
+
+# Kalibr convention: t_imu = t_cam + td.
+estimate_td: 1
+td: 0.006285609465643629
+
+# Kalibr rolling-shutter line delay 8.770052557723311e-6 s/row * 600 rows.
+rolling_shutter: 1
+rolling_shutter_tr: 0.005262031534633987
+
+save_image: 0
+visualize_imu_forward: 0
+visualize_camera_size: 0.4

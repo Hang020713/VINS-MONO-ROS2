@@ -11,7 +11,7 @@ def generate_launch_description():
     config_pkg_share = get_package_share_directory('config_pkg')
     default_config = os.path.join(
         config_pkg_share,
-        'config', 'raspberry_pi_5', 'imx708_template.yaml')
+        'config', 'raspberry_pi_5', 'imx708_px4_vio.yaml')
     vins_folder = config_pkg_share + os.sep
 
     config_file = LaunchConfiguration('config_file')

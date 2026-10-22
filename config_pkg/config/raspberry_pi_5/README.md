@@ -1,19 +1,20 @@
 # Raspberry Pi 5 live VIO
 
-This folder contains a guarded starter configuration for one IMX708 image stream and the
-`sensor_msgs/msg/Imu` stream produced by the PX4 converter. Live VIO does not need a EuRoC
-dataset. A recorded calibration sequence is still useful for camera intrinsics, camera-to-IMU
-extrinsics, IMU noise, and time-offset calibration.
+This folder contains a guarded template and a ready configuration for one IMX708 image stream
+and the `sensor_msgs/msg/Imu` stream produced by the PX4 converter. Live VIO does not need a
+EuRoC dataset. A recorded calibration sequence is still useful for camera intrinsics,
+camera-to-IMU extrinsics, IMU noise, and time-offset calibration.
 
 ## Before launching
 
-1. Copy `imx708_template.yaml` to a writable location and fill in the actual image dimensions,
-   intrinsics, camera-to-IMU transform, IMU noise values, and rolling-shutter readout time.
-   Keep `calibration_required: 1` until all those values are ready; both VINS nodes refuse to
-   start with the template. Then set it to `0`.
-2. Calibrate at the same `camera_ros` output resolution, sensor mode, crop, and focus that will be
-   used at runtime. The VINS feature tracker reads its own intrinsics from this file; it does not
-   automatically copy `/camera/camera_info`.
+1. `imx708_px4_vio.yaml` is populated from the supplied 800x600, 30 Hz Kalibr pinhole-radtan-rs
+   result, the PX4 IMU calibration, and the calibrated camera-IMU transform/time offset. The
+   launch file uses it by default. Use `imx708_template.yaml` for another calibration and keep
+   `calibration_required: 1` until all values are filled; both VINS nodes refuse to start with
+   the template.
+2. Use the same `camera_ros` output resolution, sensor mode, crop, and focus as calibration. The
+   supplied camera intrinsics and rolling-shutter timing match 800x600. The VINS feature tracker
+   reads its intrinsics from this YAML; it does not automatically copy `/camera/camera_info`.
 3. `rolling_shutter_tr` is the full-frame sensor readout duration in seconds. The estimator divides
    it by the configured image height to compute the per-row timing. Its value depends on the active
    IMX708 sensor mode; do not use the frame period as a substitute.
@@ -21,10 +22,11 @@ extrinsics, IMU noise, and time-offset calibration.
    the IMU coordinates (`imu^R_cam`, `imu^T_cam`). The supplied PX4 converter rotates FRD data into
    FLU by negating Y and Z, so calibrate the transform for that converted FLU frame. Translation is
    in meters. IMU acceleration and angular velocity must be in m/s^2 and rad/s.
-5. Run the camera and PX4 converter before launching VINS. The expected inputs are
-   `/camera/image_raw` and `/imu/data`; update `image_topic` in the YAML if the camera uses a
-   different topic, and use the `imu_input_topic` launch argument if the converter uses a different
-   IMU topic. `imu_clock_bridge` maps the converter's system-clock stamps to the `CLOCK_BOOTTIME`
+5. Run the camera and PX4 converter before launching VINS. The bridge subscribes to `/imu/data`
+   and publishes the converted-clock stream on `/imu/data_vio`, which is the IMU topic VINS uses.
+   Update `image_topic` in the YAML if the camera uses a different topic, and use the
+   `imu_input_topic` launch argument if the converter uses a different IMU topic.
+   `imu_clock_bridge` maps the converter's system-clock stamps to the `CLOCK_BOOTTIME`
    domain used by libcamera's default sensor timestamp, then publishes `/imu/data_vio`.
 
 The bridge expects the PX4 uXRCE-DDS client to synchronize message timestamps with the companion
@@ -47,9 +49,10 @@ source install/setup.bash
 Then launch the completed configuration:
 
 ```bash
-ros2 launch config_pkg pi5_vio.launch.py \
-  config_file:=/absolute/path/to/imx708.yaml
+ros2 launch config_pkg pi5_vio.launch.py
 ```
+
+Pass `config_file:=/absolute/path/to/another.yaml` to select a different configuration.
 
 The launch starts the IMU clock bridge, feature tracker, and VINS estimator. It does not start the
 camera or PX4 converter; keep those running separately. The tracker and estimator use sensor-data
