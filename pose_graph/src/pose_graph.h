@@ -6,6 +6,7 @@
 #include <eigen3/Eigen/Dense>
 #include <string>
 #include <ceres/ceres.h>
+#include <ceres/autodiff_manifold.h>
 #include <ceres/rotation.h>
 #include <queue>
 #include <assert.h>
@@ -100,17 +101,22 @@ class AngleLocalParameterization {
  public:
 
   template <typename T>
-  bool operator()(const T* theta_radians, const T* delta_theta_radians,
-                  T* theta_radians_plus_delta) const {
+  bool Plus(const T* theta_radians, const T* delta_theta_radians,
+            T* theta_radians_plus_delta) const {
     *theta_radians_plus_delta =
         NormalizeAngle(*theta_radians + *delta_theta_radians);
 
     return true;
   }
 
-  static ceres::LocalParameterization* Create() {
-    return (new ceres::AutoDiffLocalParameterization<AngleLocalParameterization,
-                                                     1, 1>);
+  template <typename T>
+  bool Minus(const T* y, const T* x, T* y_minus_x) const {
+    *y_minus_x = NormalizeAngle(*y - *x);
+    return true;
+  }
+
+  static ceres::Manifold* Create() {
+    return new ceres::AutoDiffManifold<AngleLocalParameterization, 1, 1>;
   }
 };
 
