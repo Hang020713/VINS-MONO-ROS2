@@ -64,6 +64,11 @@ void img_callback(const sensor_msgs::msg::Image::SharedPtr img_msg)
     else
         PUB_THIS_FRAME = false;
 
+    // Skip the expensive image conversion and optical-flow work when the input
+    // stream is faster than the configured VIO processing rate.
+    if (!PUB_THIS_FRAME)
+        return;
+
     cv_bridge::CvImageConstPtr ptr;
     if (img_msg->encoding == "8UC1")
     {

@@ -1,0 +1,78 @@
+%YAML:1.0
+
+# Raspberry Pi 5 + IMX708 at 640x480. Intrinsics, readout, extrinsics, and td
+# are from the 2026-10-22 Kalibr bags recorded at about 30 Hz.
+calibration_required: 0
+
+image_topic: "/camera/image_raw"
+# /imu/data is already on the camera clock. Do not use /imu/data_vio.
+imu_topic: "/imu/data"
+output_path: "/home/b/vins_pi5/"
+
+model_type: PINHOLE
+camera_name: imx708
+image_width: 640
+image_height: 480
+distortion_parameters:
+   k1: 0.03612829074397623
+   k2: 0.12940385233648583
+   p1: -0.0006602641432969925
+   p2: 0.0014475260294867956
+projection_parameters:
+   fx: 1016.1065849010927
+   fy: 1014.1928315598503
+   cx: 420.06820824463335
+   cy: 233.19112244132148
+
+# Inverse of Kalibr T_cam_imu: camera frame expressed in the FLU IMU frame.
+estimate_extrinsic: 0
+extrinsicRotation: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   data: [-0.026650423468795537, 0.008787671285361065, 0.9996061883373439,
+           0.9995541333069918, -0.013234386080165916, 0.026765380886300705,
+           0.013464379593635778, 0.9998738059667633, -0.008431051162039793]
+extrinsicTranslation: !!opencv-matrix
+   rows: 3
+   cols: 1
+   dt: d
+   data: [-0.011425517153139476, -0.011246202673530445, 0.08782802490469523]
+
+# 10 Hz tracking profile for the Pi 5.
+max_cnt: 80
+min_dist: 25
+freq: 10
+F_threshold: 1.0
+show_track: 0
+equalize: 0
+fisheye: 0
+
+max_solver_time: 0.04
+max_num_iterations: 8
+keyframe_parallax: 10.0
+
+# Kalibr IMU noise estimates (200 Hz), in SI units.
+acc_n: 0.000686
+gyr_n: 4.89e-5
+acc_w: 0.0001
+gyr_w: 1.0e-5
+g_norm: 9.80665
+
+loop_closure: 0
+load_previous_pose_graph: 0
+fast_relocalization: 0
+pose_graph_save_path: "/home/b/vins_pi5/pose_graph/"
+support_path: ""
+
+# Kalibr timeshift_cam_imu: t_imu = t_cam + td.
+estimate_td: 0
+td: 0.00603619065008317
+
+# Full-frame readout = line_delay * 480.
+rolling_shutter: 1
+rolling_shutter_tr: 0.007948421977700593
+
+save_image: 0
+visualize_imu_forward: 0
+visualize_camera_size: 0.4

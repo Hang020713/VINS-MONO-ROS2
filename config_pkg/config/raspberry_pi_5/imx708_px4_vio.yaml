@@ -40,9 +40,9 @@ extrinsicTranslation: !!opencv-matrix
    dt: d
    data: [0.01990552, -0.00211620, 0.10954284]
 
-max_cnt: 150
+max_cnt: 120
 min_dist: 25
-freq: 30
+freq: 15
 F_threshold: 1.0
 show_track: 0
 equalize: 0

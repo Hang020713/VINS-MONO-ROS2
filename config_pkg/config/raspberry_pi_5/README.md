@@ -7,11 +7,12 @@ camera-to-IMU extrinsics, IMU noise, and time-offset calibration.
 
 ## Before launching
 
-1. `imx708_px4_vio.yaml` is populated from the supplied 800x600, 30 Hz Kalibr pinhole-radtan-rs
-   result, the PX4 IMU calibration, and the calibrated camera-IMU transform/time offset. The
-   launch file uses it by default. Use `imx708_template.yaml` for another calibration and keep
-   `calibration_required: 1` until all values are filled; both VINS nodes refuse to start with
-   the template.
+1. `imx708_px4_vio.yaml` is populated from the supplied 800x600 Kalibr pinhole-radtan-rs result,
+   the PX4 IMU calibration, and the calibrated camera-IMU transform/time offset. Its tracker is
+   limited to 15 Hz and 120 features for the Pi 5; the camera calibration was collected at 30 Hz.
+   Keep the same 800x600 sensor mode at runtime. Use `imx708_template.yaml` for another calibration
+   and keep `calibration_required: 1` until all values are filled; both VINS nodes refuse to start
+   with the template.
 2. Use the same `camera_ros` output resolution, sensor mode, crop, and focus as calibration. The
    supplied camera intrinsics and rolling-shutter timing match 800x600. The VINS feature tracker
    reads its intrinsics from this YAML; it does not automatically copy `/camera/camera_info`.
@@ -28,6 +29,9 @@ camera-to-IMU extrinsics, IMU noise, and time-offset calibration.
    `imu_input_topic` launch argument if the converter uses a different IMU topic.
    `imu_clock_bridge` maps the converter's system-clock stamps to the `CLOCK_BOOTTIME`
    domain used by libcamera's default sensor timestamp, then publishes `/imu/data_vio`.
+   Your `run_camera_node.sh` can cap the camera at 15 Hz by passing
+   `--ros-args -p FrameDurationLimits:="[66667,66667]"`. This reduces camera and DDS load; keep
+   the output at 800x600 and check `ros2 topic hz /camera/image_raw` after restarting the camera.
 
 The bridge expects the PX4 uXRCE-DDS client to synchronize message timestamps with the companion
 computer clock. On firmware versions that expose `UXRCE_DDS_SYNCT`, leave it enabled. Verify
