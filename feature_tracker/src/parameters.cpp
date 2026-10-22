@@ -44,8 +44,21 @@ void readParameters(rclcpp::Node::SharedPtr &n)
     cv::FileStorage fsSettings(config_file, cv::FileStorage::READ);
     if(!fsSettings.isOpened())
     {
-        RCUTILS_LOG_ERROR("ERROR: Wrong path to settings");
+        RCLCPP_FATAL(n->get_logger(), "Cannot open VINS config file: %s", config_file.c_str());
+        rclcpp::shutdown();
+        return;
     }
+
+    int calibration_required = 0;
+    fsSettings["calibration_required"] >> calibration_required;
+    if (calibration_required != 0)
+    {
+        RCLCPP_FATAL(n->get_logger(), "This VINS config is a template. Complete the camera/IMU calibration values and set calibration_required: 0 before starting.");
+        fsSettings.release();
+        rclcpp::shutdown();
+        return;
+    }
+
     std::string VINS_FOLDER_PATH = readParam<std::string>(n, "vins_folder");
 
     fsSettings["image_topic"] >> IMAGE_TOPIC;
@@ -54,6 +67,10 @@ void readParameters(rclcpp::Node::SharedPtr &n)
     MIN_DIST = fsSettings["min_dist"];
     ROW = fsSettings["image_height"];
     COL = fsSettings["image_width"];
+    double fx = 0.0;
+    double fy = 0.0;
+    fsSettings["projection_parameters"]["fx"] >> fx;
+    fsSettings["projection_parameters"]["fy"] >> fy;
     FREQ = fsSettings["freq"];
     F_THRESHOLD = fsSettings["F_threshold"];
     SHOW_TRACK = fsSettings["show_track"];
@@ -70,6 +87,14 @@ void readParameters(rclcpp::Node::SharedPtr &n)
 
     if (FREQ == 0)
         FREQ = 100;
+
+    if (IMAGE_TOPIC.empty() || ROW <= 0 || COL <= 0 || fx <= 0.0 || fy <= 0.0)
+    {
+        RCLCPP_FATAL(n->get_logger(), "Invalid image topic, image dimensions, or camera intrinsics in VINS config.");
+        fsSettings.release();
+        rclcpp::shutdown();
+        return;
+    }
 
     fsSettings.release();
 

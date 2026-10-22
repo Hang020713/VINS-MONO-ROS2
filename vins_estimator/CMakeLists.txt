@@ -51,13 +51,18 @@ add_executable(vins_estimator
     src/initial/initial_ex_rotation.cpp
     )
 
+add_executable(imu_clock_bridge
+    src/imu_clock_bridge.cpp
+    )
+
 ament_target_dependencies(vins_estimator rclcpp rcpputils std_msgs sensor_msgs visualization_msgs geometry_msgs nav_msgs tf2 tf2_ros cv_bridge camera_model image_transport)
+ament_target_dependencies(imu_clock_bridge rclcpp sensor_msgs)
 
 target_link_libraries(vins_estimator ${OpenCV_LIBS} ${CERES_LIBRARIES}) 
 
 # Install nodes
 install(
-  TARGETS vins_estimator
+  TARGETS vins_estimator imu_clock_bridge
   DESTINATION lib/${PROJECT_NAME}
 )
 

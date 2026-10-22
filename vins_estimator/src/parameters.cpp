@@ -48,7 +48,19 @@ void readParameters(rclcpp::Node::SharedPtr n)
     cv::FileStorage fsSettings(config_file, cv::FileStorage::READ);
     if(!fsSettings.isOpened())
     {
-        RCLCPP_ERROR(n->get_logger(), "ERROR: Wrong path to settings");
+        RCLCPP_FATAL(n->get_logger(), "Cannot open VINS config file: %s", config_file.c_str());
+        rclcpp::shutdown();
+        return;
+    }
+
+    int calibration_required = 0;
+    fsSettings["calibration_required"] >> calibration_required;
+    if (calibration_required != 0)
+    {
+        RCLCPP_FATAL(n->get_logger(), "This VINS config is a template. Complete the camera/IMU calibration values and set calibration_required: 0 before starting.");
+        fsSettings.release();
+        rclcpp::shutdown();
+        return;
     }
 
     fsSettings["imu_topic"] >> IMU_TOPIC;
@@ -74,9 +86,24 @@ void readParameters(rclcpp::Node::SharedPtr n)
     GYR_N = fsSettings["gyr_n"];
     GYR_W = fsSettings["gyr_w"];
     G.z() = fsSettings["g_norm"];
+    if (ACC_N <= 0.0 || ACC_W <= 0.0 || GYR_N <= 0.0 || GYR_W <= 0.0 || G.z() <= 0.0)
+    {
+        RCLCPP_FATAL(n->get_logger(), "IMU noise values and g_norm must be positive in the VINS config.");
+        fsSettings.release();
+        rclcpp::shutdown();
+        return;
+    }
     ROW = fsSettings["image_height"];
     COL = fsSettings["image_width"];
     RCLCPP_INFO(n->get_logger(), "ROW: %f COL: %f ", ROW, COL);
+
+    if (IMU_TOPIC.empty() || ROW <= 0.0 || COL <= 0.0)
+    {
+        RCLCPP_FATAL(n->get_logger(), "Invalid IMU topic or image dimensions in VINS config.");
+        fsSettings.release();
+        rclcpp::shutdown();
+        return;
+    }
 
     ESTIMATE_EXTRINSIC = fsSettings["estimate_extrinsic"];
     if (ESTIMATE_EXTRINSIC == 2)
@@ -126,7 +153,14 @@ void readParameters(rclcpp::Node::SharedPtr n)
     if (ROLLING_SHUTTER)
     {
         TR = fsSettings["rolling_shutter_tr"];
-        RCLCPP_INFO_STREAM(n->get_logger(), "rolling shutter camera, read out time per line: " << TR);
+        if (TR <= 0.0)
+        {
+            RCLCPP_FATAL(n->get_logger(), "rolling_shutter_tr must be the positive full-frame readout time in seconds for a rolling-shutter camera.");
+            fsSettings.release();
+            rclcpp::shutdown();
+            return;
+        }
+        RCLCPP_INFO_STREAM(n->get_logger(), "Rolling-shutter full-frame readout time: " << TR << " s");
     }
     else
     {

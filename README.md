@@ -72,6 +72,19 @@ ros2 launch ar_demo 3dm_bag.launch.py               # for featuer tracking, back
 ros2 bag play $(PATH_TO_YOUR_DATASET)/ar_box        # for ros2 bag
 ```
 ![ar_demo](https://github.com/dongbo19/VINS-MONO-ROS2/blob/main/config_pkg/config/gif/vins_ros2_ar_demo.gif)
+
+## 4.5. Live VIO on Raspberry Pi 5 (ROS 2 Jazzy)
+
+Live monocular VIO does not require downloading or playing a dataset. EuRoC is used by the
+examples above for replay and benchmarking. A calibrated camera and camera-to-IMU transform are
+still required; a recorded sequence can help obtain and validate those values.
+
+For Raspberry Pi Camera Module 3 (IMX708) and a PX4 `sensor_combined` converter, see
+[`config/raspberry_pi_5/README.md`](config_pkg/config/raspberry_pi_5/README.md). It includes a
+guarded YAML template, an IMU clock bridge for the PX4/system-clock to libcamera `CLOCK_BOOTTIME`
+conversion, and a launch file for the feature tracker and estimator. The camera and the PX4
+converter must be started separately.
+
 # 5. Run your own datasets
 If you need to run your own collected datasets, please add your configuration files to the _config_pkg/config_ directory, and then modify the **_config_path_** in the launch files mentioned above to find your configuration file:  
 ```

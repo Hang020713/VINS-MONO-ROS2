@@ -1,0 +1,80 @@
+%YAML:1.0
+
+# Template for one Raspberry Pi Camera Module 3 (IMX708) and one PX4 IMU.
+# Replace every marked calibration value before setting calibration_required to 0.
+calibration_required: 1
+
+# ROS topics. camera_ros should publish mono or color images; feature_tracker converts to mono8.
+image_topic: "/camera/image_raw"
+imu_topic: "/imu/data_vio"
+output_path: "/tmp/vins_pi5"
+
+# Camera intrinsics: calibrate with the exact sensor mode, output resolution, crop, and focus.
+model_type: PINHOLE
+camera_name: imx708
+image_width: 0
+image_height: 0
+distortion_parameters:
+   k1: 0.0
+   k2: 0.0
+   p1: 0.0
+   p2: 0.0
+projection_parameters:
+   fx: 0.0
+   fy: 0.0
+   cx: 0.0
+   cy: 0.0
+
+# imu^R_cam and imu^T_cam: camera-frame coordinates expressed in the converted FLU IMU frame.
+# Translation is in meters. Replace both matrices using a camera-IMU calibration.
+estimate_extrinsic: 0
+extrinsicRotation: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   data: [1.0, 0.0, 0.0,
+          0.0, 1.0, 0.0,
+          0.0, 0.0, 1.0]
+extrinsicTranslation: !!opencv-matrix
+   rows: 3
+   cols: 1
+   dt: d
+   data: [0.0, 0.0, 0.0]
+
+# Feature tracking
+max_cnt: 150
+min_dist: 30
+freq: 20
+F_threshold: 1.0
+show_track: 0
+equalize: 0
+fisheye: 0
+
+# Noise densities/random walks: replace with values calibrated for this PX4 IMU stream.
+max_solver_time: 0.04
+max_num_iterations: 8
+keyframe_parallax: 10.0
+acc_n: 0.0
+gyr_n: 0.0
+acc_w: 0.0
+gyr_w: 0.0
+g_norm: 9.81007
+
+# Runtime uses only the estimator; loop closure is disabled for the Pi 5 starter setup.
+loop_closure: 0
+load_previous_pose_graph: 0
+fast_relocalization: 0
+pose_graph_save_path: "/tmp/vins_pi5/"
+support_path: ""
+
+# Time offset is refined online after clock domains are aligned by imu_clock_bridge.
+estimate_td: 1
+td: 0.0
+
+# IMX708 is rolling shutter. Set full-frame readout time for the chosen sensor mode (seconds).
+rolling_shutter: 1
+rolling_shutter_tr: 0.0
+
+save_image: 0
+visualize_imu_forward: 0
+visualize_camera_size: 0.4
